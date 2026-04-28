@@ -1,7 +1,8 @@
-import { Request, Response, NextFunction } from 'express';
+import { NextFunction, Response } from 'express';
 import { z } from 'zod';
 import { AuthService } from './auth.service';
 import { successResponse, errorResponse } from '../../utils/response';
+import { AuthenticatedRequest } from '../../middleware/auth';
 
 const authService = new AuthService();
 
@@ -26,7 +27,7 @@ const logoutSchema = z.object({
 });
 
 export class AuthController {
-  async register(req: Request, res: Response, next: NextFunction) {
+  async register(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
       const data = registerSchema.parse(req.body);
       const result = await authService.register(data.email, data.password, data.name);
@@ -42,7 +43,7 @@ export class AuthController {
     }
   }
 
-  async login(req: Request, res: Response, next: NextFunction) {
+  async login(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
       const data = loginSchema.parse(req.body);
       const result = await authService.login(data.email, data.password);
@@ -58,7 +59,7 @@ export class AuthController {
     }
   }
 
-  async refresh(req: Request, res: Response, next: NextFunction) {
+  async refresh(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
       const data = refreshSchema.parse(req.body);
       const result = await authService.refresh(data.refreshToken);
@@ -74,7 +75,7 @@ export class AuthController {
     }
   }
 
-  async logout(req: Request, res: Response, next: NextFunction) {
+  async logout(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
       const data = logoutSchema.parse(req.body);
       await authService.logout(data.refreshToken);
@@ -87,9 +88,9 @@ export class AuthController {
     }
   }
 
-  async getMe(req: Request, res: Response, next: NextFunction) {
+  async getMe(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const userId = (req as any).user?.id;
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json(errorResponse('Unauthorized', 401));
       }
