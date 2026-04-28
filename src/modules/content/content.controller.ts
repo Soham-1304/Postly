@@ -1,7 +1,8 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { ContentService } from './content.service';
 import { successResponse, errorResponse } from '../../utils/response';
+import { AuthenticatedRequest } from '../../middleware/auth';
 
 const contentService = new ContentService();
 
@@ -35,9 +36,9 @@ const generateContentSchema = z.object({
 });
 
 export class ContentController {
-  async generateContent(req: Request, res: Response, next: NextFunction) {
+  async generateContent(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const userId = (req as any).user?.id;
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json(errorResponse('Unauthorized', 401));
       }

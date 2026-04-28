@@ -1,7 +1,8 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { UserService } from './user.service';
 import { successResponse, errorResponse } from '../../utils/response';
+import { AuthenticatedRequest } from '../../middleware/auth';
 
 const userService = new UserService();
 
@@ -32,9 +33,9 @@ const updateAiKeysSchema = z
   });
 
 export class UserController {
-  async getProfile(req: Request, res: Response, next: NextFunction) {
+  async getProfile(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const userId = (req as any).user?.id;
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json(errorResponse('Unauthorized', 401));
       }
@@ -49,9 +50,9 @@ export class UserController {
     }
   }
 
-  async updateProfile(req: Request, res: Response, next: NextFunction) {
+  async updateProfile(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const userId = (req as any).user?.id;
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json(errorResponse('Unauthorized', 401));
       }
@@ -72,9 +73,9 @@ export class UserController {
     }
   }
 
-  async addSocialAccount(req: Request, res: Response, next: NextFunction) {
+  async addSocialAccount(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const userId = (req as any).user?.id;
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json(errorResponse('Unauthorized', 401));
       }
@@ -111,9 +112,9 @@ export class UserController {
     }
   }
 
-  async getSocialAccounts(req: Request, res: Response, next: NextFunction) {
+  async getSocialAccounts(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const userId = (req as any).user?.id;
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json(errorResponse('Unauthorized', 401));
       }
@@ -125,9 +126,9 @@ export class UserController {
     }
   }
 
-  async deleteSocialAccount(req: Request, res: Response, next: NextFunction) {
+  async deleteSocialAccount(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const userId = (req as any).user?.id;
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json(errorResponse('Unauthorized', 401));
       }
@@ -149,9 +150,9 @@ export class UserController {
     }
   }
 
-  async updateAiKeys(req: Request, res: Response, next: NextFunction) {
+  async updateAiKeys(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const userId = (req as any).user?.id;
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json(errorResponse('Unauthorized', 401));
       }

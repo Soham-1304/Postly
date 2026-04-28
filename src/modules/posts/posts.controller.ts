@@ -1,7 +1,8 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { PostsService } from './posts.service';
 import { successResponse, errorResponse } from '../../utils/response';
+import { AuthenticatedRequest } from '../../middleware/auth';
 
 const postsService = new PostsService();
 
@@ -48,9 +49,9 @@ const getPostsSchema = z.object({
 });
 
 export class PostsController {
-  async publishPost(req: Request, res: Response, next: NextFunction) {
+  async publishPost(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const userId = (req as any).user?.id;
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json(errorResponse('Unauthorized', 401));
       }
@@ -72,9 +73,9 @@ export class PostsController {
     }
   }
 
-  async schedulePost(req: Request, res: Response, next: NextFunction) {
+  async schedulePost(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const userId = (req as any).user?.id;
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json(errorResponse('Unauthorized', 401));
       }
@@ -99,9 +100,9 @@ export class PostsController {
     }
   }
 
-  async getPosts(req: Request, res: Response, next: NextFunction) {
+  async getPosts(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const userId = (req as any).user?.id;
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json(errorResponse('Unauthorized', 401));
       }
@@ -139,9 +140,9 @@ export class PostsController {
     }
   }
 
-  async getPost(req: Request, res: Response, next: NextFunction) {
+  async getPost(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const userId = (req as any).user?.id;
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json(errorResponse('Unauthorized', 401));
       }
@@ -164,9 +165,9 @@ export class PostsController {
     }
   }
 
-  async retryPost(req: Request, res: Response, next: NextFunction) {
+  async retryPost(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const userId = (req as any).user?.id;
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json(errorResponse('Unauthorized', 401));
       }
@@ -186,9 +187,9 @@ export class PostsController {
     }
   }
 
-  async cancelPost(req: Request, res: Response, next: NextFunction) {
+  async cancelPost(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const userId = (req as any).user?.id;
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json(errorResponse('Unauthorized', 401));
       }
