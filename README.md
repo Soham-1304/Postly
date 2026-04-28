@@ -54,12 +54,12 @@ Postly is a backend-only social content workflow: a Telegram bot collects a post
 ## Required External Accounts
 
 - Supabase PostgreSQL database for production `DATABASE_URL`
-- Upstash Redis for production `REDIS_URL`
+- Redis Cloud instance for production `REDIS_URL` (BullMQ requires standard Redis, not Upstash due to Lua script compatibility)
 - Google AI Studio key for `GEMINI_API_KEY`
 - Telegram BotFather token for `TELEGRAM_BOT_TOKEN`
 - Render web service for deployment
 
-Detailed setup steps for GitHub, Supabase, Upstash, env vars, and local verification are in [Phase 1 Setup](docs/PHASE_1_SETUP.md).
+Detailed setup steps for GitHub, Supabase, Redis Cloud, env vars, and local verification are in [Phase 1 Setup](docs/PHASE_1_SETUP.md).
 
 ## Git Strategy
 
