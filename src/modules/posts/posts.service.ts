@@ -49,21 +49,15 @@ export class PostsService {
           }
         });
 
-        // Try to enqueue job (workaround for Upstash Lua issues)
-        try {
-          const jobData: PublishJobData = {
-            postId: post.id,
-            platformPostId: platformPost.id,
-            platform: platform as any,
-            content,
-            userId,
-            attempts: 0
-          };
-          await (publishQueue as any).add(jobData as any);
-        } catch (err) {
-          // Queue error (Upstash Lua issue) - still processed, will be picked up by worker
-          console.warn(`⚠️  Queue add warning for ${platform}: ${(err as any).message?.substring(0, 100)}`);
-        }
+        const jobData: PublishJobData = {
+          postId: post.id,
+          platformPostId: platformPost.id,
+          platform: platform as any,
+          content,
+          userId,
+          attempts: 0
+        };
+        await (publishQueue as any).add(jobData as any);
 
         return platformPost;
       })
@@ -125,19 +119,15 @@ export class PostsService {
           }
         });
 
-        try {
-          const jobData: PublishJobData = {
-            postId: post.id,
-            platformPostId: platformPost.id,
-            platform: platform as any,
-            content,
-            userId,
-            attempts: 0
-          };
-          await (publishQueue as any).add(jobData as any);
-        } catch (err) {
-          console.warn(`⚠️  Queue add warning for ${platform}: ${(err as any).message?.substring(0, 100)}`);
-        }
+        const jobData: PublishJobData = {
+          postId: post.id,
+          platformPostId: platformPost.id,
+          platform: platform as any,
+          content,
+          userId,
+          attempts: 0
+        };
+        await (publishQueue as any).add(jobData as any);
 
         return platformPost;
       })
@@ -229,11 +219,7 @@ export class PostsService {
         attempts: platformPost.attempts
       };
 
-      try {
-        await (publishQueue as any).add(jobData as any);
-      } catch (err) {
-        console.warn(`⚠️  Queue retry warning for ${platformPost.platform}: ${(err as any).message?.substring(0, 100)}`);
-      }
+      await (publishQueue as any).add(jobData as any);
 
       await prisma.platformPost.update({
         where: { id: platformPost.id },
@@ -251,19 +237,15 @@ export class PostsService {
       throw new Error('Can only cancel queued posts');
     }
 
-    try {
-      const jobs = await (publishQueue as any).getJobs(
-        ['waiting', 'delayed', 'active'],
-        0,
-        -1
-      );
-      const postJobs = jobs.filter((j: any) => j.data.postId === postId);
+    const jobs = await (publishQueue as any).getJobs(
+      ['waiting', 'delayed', 'active'],
+      0,
+      -1
+    );
+    const postJobs = jobs.filter((j: any) => j.data.postId === postId);
 
-      for (const job of postJobs) {
-        await job.remove();
-      }
-    } catch (err) {
-      console.warn(`⚠️  Queue cancellation warning: ${(err as any).message?.substring(0, 100)}`);
+    for (const job of postJobs) {
+      await job.remove();
     }
 
     await prisma.post.update({

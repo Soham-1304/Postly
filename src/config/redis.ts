@@ -2,7 +2,7 @@ import Redis from 'ioredis';
 import { env } from './env';
 
 /**
- * Upstash Redis connection for BullMQ queue
+ * Redis connection for BullMQ queue (Redis Cloud)
  */
 export const redis = new Redis(env.REDIS_URL, {
   retryStrategy: (times) => {
@@ -15,7 +15,7 @@ export const redis = new Redis(env.REDIS_URL, {
 
 // Event handlers
 redis.on('connect', () => {
-  console.log('✅ Redis connected (Upstash)');
+  console.log('✅ Redis connected (Redis Cloud)');
 });
 
 redis.on('ready', () => {
