@@ -16,6 +16,7 @@ model User {
   bio             String?
   defaultTone     String          @default("professional")
   defaultLanguage String          @default("en")
+  telegramChatId  String?         @unique
   createdAt       DateTime        @default(now())
   aiKeys          AiKeys?
   posts           Post[]

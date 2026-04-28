@@ -22,6 +22,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.91.1",
     "@google/generative-ai": "^0.24.1",
+    "@grammyjs/storage-redis": "^2.5.1",
     "@prisma/client": "^6.6.0",
     "bcryptjs": "^3.0.2",
     "bullmq": "^5.51.1",
