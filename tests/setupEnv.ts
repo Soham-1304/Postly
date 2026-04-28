@@ -1,0 +1,11 @@
+process.env.NODE_ENV = "test";
+process.env.PORT = "3000";
+process.env.DATABASE_URL = "postgresql://postly:postly@localhost:5432/postly?schema=public";
+process.env.REDIS_URL = "redis://localhost:6379";
+process.env.ACCESS_TOKEN_SECRET = "test_access_secret_that_is_long_enough";
+process.env.REFRESH_TOKEN_SECRET = "test_refresh_secret_that_is_long_enough";
+process.env.ENCRYPTION_KEY = "0000000000000000000000000000000000000000000000000000000000000000";
+process.env.GEMINI_API_KEY = "test_gemini_key";
+process.env.TELEGRAM_BOT_TOKEN = "123456:test_telegram_token";
+process.env.TELEGRAM_WEBHOOK_SECRET = "test_webhook_secret";
+process.env.APP_BASE_URL = "http://localhost:3000";
