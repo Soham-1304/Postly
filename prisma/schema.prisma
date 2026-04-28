@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String          @id @default(uuid())
+  email           String          @unique
+  passwordHash    String
+  name            String
+  bio             String?
+  defaultTone     String          @default("professional")
+  defaultLanguage String          @default("en")
+  createdAt       DateTime        @default(now())
+  aiKeys          AiKeys?
+  posts           Post[]
+  socialAccounts  SocialAccount[]
+}
+
+model SocialAccount {
+  id              String   @id @default(uuid())
+  userId          String
+  platform        String
+  accessTokenEnc  String
+  refreshTokenEnc String?
+  handle          String
+  connectedAt     DateTime @default(now())
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([platform])
+}
+
+model AiKeys {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  openaiKeyEnc    String?
+  anthropicKeyEnc String?
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Post {
+  id            String         @id @default(uuid())
+  userId        String
+  idea          String
+  postType      String
+  tone          String
+  language      String         @default("en")
+  modelUsed     String
+  createdAt     DateTime       @default(now())
+  publishAt     DateTime?
+  status        String         @default("queued")
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platformPosts PlatformPost[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model PlatformPost {
+  id           String    @id @default(uuid())
+  postId       String
+  platform     String
+  content      String
+  status       String    @default("queued")
+  publishedAt  DateTime?
+  errorMessage String?
+  attempts     Int       @default(0)
+  post         Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@index([platform])
+  @@index([status])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
