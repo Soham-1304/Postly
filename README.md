@@ -59,6 +59,8 @@ Postly is a backend-only social content workflow: a Telegram bot collects a post
 - Telegram BotFather token for `TELEGRAM_BOT_TOKEN`
 - Render web service for deployment
 
+Detailed setup steps for GitHub, Supabase, Upstash, env vars, and local verification are in [Phase 1 Setup](docs/PHASE_1_SETUP.md).
+
 ## Git Strategy
 
 Keep commits small and phase-based. Recommended first commits:

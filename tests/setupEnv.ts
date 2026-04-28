@@ -1,6 +1,7 @@
 process.env.NODE_ENV = "test";
 process.env.PORT = "3000";
 process.env.DATABASE_URL = "postgresql://postly:postly@localhost:5432/postly?schema=public";
+process.env.DIRECT_URL = "postgresql://postly:postly@localhost:5432/postly?schema=public";
 process.env.REDIS_URL = "redis://localhost:6379";
 process.env.ACCESS_TOKEN_SECRET = "test_access_secret_that_is_long_enough";
 process.env.REFRESH_TOKEN_SECRET = "test_refresh_secret_that_is_long_enough";

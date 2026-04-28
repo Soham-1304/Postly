@@ -1,6 +1,8 @@
 node_modules/
 dist/
 coverage/
+postly-starter-pack/
+docs/
 .env
 .env.*
 !.env.example
