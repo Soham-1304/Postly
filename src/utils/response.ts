@@ -21,3 +21,23 @@ export function sendError(res: Response, message: string, code = 500, details?: 
     }
   });
 }
+
+// Helper functions for quick response formatting
+export function successResponse<T>(data: T, meta: Meta = null) {
+  return {
+    data,
+    meta,
+    error: null
+  };
+}
+
+export function errorResponse(message: string, code = 500) {
+  return {
+    data: null,
+    meta: null,
+    error: {
+      message,
+      code
+    }
+  };
+}
