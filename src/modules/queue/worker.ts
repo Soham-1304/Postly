@@ -1,15 +1,54 @@
-import { Worker } from "bullmq";
-import { redis } from "../../config/redis";
-import type { PublishJob } from "./queue";
+import { Worker } from 'bullmq';
+import { redis } from '../../config/redis';
+import { PublishJobData } from './queue';
+import { processTwitterJob } from './jobs/twitter.job';
+import { processLinkedInJob } from './jobs/linkedin.job';
+import { processInstagramJob } from './jobs/instagram.job';
+import { processThreadsJob } from './jobs/threads.job';
 
-export const publishWorker = new Worker<PublishJob>(
-  "platform-publish",
+/**
+ * BullMQ Worker - listens on platform-publish queue
+ * Routes jobs to platform-specific processors
+ * Retries on failure with exponential backoff
+ */
+export const publishWorker = new Worker<PublishJobData>(
+  'platform-publish',
   async (job) => {
-    console.log(`Scaffold worker received ${job.data.platform} job for post ${job.data.postId}`);
+    console.log(`🔄 Processing job ${job.id}: ${job.data.platform}`);
+
+    // Route to platform-specific processor
+    switch (job.data.platform) {
+      case 'twitter':
+        return await processTwitterJob(job);
+      case 'linkedin':
+        return await processLinkedInJob(job);
+      case 'instagram':
+        return await processInstagramJob(job);
+      case 'threads':
+        return await processThreadsJob(job);
+      default:
+        throw new Error(`Unknown platform: ${job.data.platform}`);
+    }
   },
-  { connection: redis }
+  {
+    connection: redis,
+    concurrency: 5  // Process 5 jobs in parallel
+  }
 );
 
-publishWorker.on("failed", (job, error) => {
-  console.error(`Publish job ${job?.id ?? "unknown"} failed`, error);
+// Event handlers
+publishWorker.on('failed', (job, err) => {
+  console.error(
+    `❌ Worker: Job ${job?.id} failed on attempt ${job?.attemptsMade}: ${err.message}`
+  );
 });
+
+publishWorker.on('completed', (job) => {
+  console.log(`✅ Worker: Job ${job.id} completed successfully`);
+});
+
+publishWorker.on('error', (err) => {
+  console.error('❌ Worker error:', err.message);
+});
+
+export default publishWorker;

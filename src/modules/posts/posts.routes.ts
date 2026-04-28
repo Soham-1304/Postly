@@ -1,11 +1,31 @@
-import { Router } from "express";
-import { sendError } from "../../utils/response";
+import { Router } from 'express';
+import { PostsController } from './posts.controller';
+import { requireAuth } from '../../middleware/auth';
 
+const postsController = new PostsController();
 export const postsRouter = Router();
 
-postsRouter.post("/publish", (_req, res) => sendError(res, "Publish post endpoint scaffolded", 501));
-postsRouter.post("/schedule", (_req, res) => sendError(res, "Schedule post endpoint scaffolded", 501));
-postsRouter.get("/", (_req, res) => sendError(res, "List posts endpoint scaffolded", 501));
-postsRouter.get("/:id", (_req, res) => sendError(res, "Post detail endpoint scaffolded", 501));
-postsRouter.post("/:id/retry", (_req, res) => sendError(res, "Retry post endpoint scaffolded", 501));
-postsRouter.delete("/:id", (_req, res) => sendError(res, "Cancel post endpoint scaffolded", 501));
+// All routes protected with JWT auth
+postsRouter.post('/publish', requireAuth, (req, res, next) =>
+  postsController.publishPost(req, res, next)
+);
+
+postsRouter.post('/schedule', requireAuth, (req, res, next) =>
+  postsController.schedulePost(req, res, next)
+);
+
+postsRouter.get('/', requireAuth, (req, res, next) =>
+  postsController.getPosts(req, res, next)
+);
+
+postsRouter.get('/:id', requireAuth, (req, res, next) =>
+  postsController.getPost(req, res, next)
+);
+
+postsRouter.post('/:id/retry', requireAuth, (req, res, next) =>
+  postsController.retryPost(req, res, next)
+);
+
+postsRouter.delete('/:id', requireAuth, (req, res, next) =>
+  postsController.cancelPost(req, res, next)
+);

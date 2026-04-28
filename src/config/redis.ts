@@ -1,17 +1,33 @@
-import IORedis from "ioredis";
-import { env } from "./env";
+import Redis from 'ioredis';
+import { env } from './env';
 
-const globalForRedis = globalThis as unknown as {
-  redis?: IORedis;
-};
+/**
+ * Upstash Redis connection for BullMQ queue
+ */
+export const redis = new Redis(env.REDIS_URL, {
+  retryStrategy: (times) => {
+    const delay = Math.min(times * 50, 2000);
+    return delay;
+  },
+  maxRetriesPerRequest: null,
+  enableReadyCheck: false
+});
 
-export const redis =
-  globalForRedis.redis ??
-  new IORedis(env.REDIS_URL, {
-    maxRetriesPerRequest: null,
-    enableReadyCheck: false
-  });
+// Event handlers
+redis.on('connect', () => {
+  console.log('✅ Redis connected (Upstash)');
+});
 
-if (process.env.NODE_ENV !== "production") {
-  globalForRedis.redis = redis;
-}
+redis.on('ready', () => {
+  console.log('✅ Redis ready for operations');
+});
+
+redis.on('error', (err) => {
+  console.error('❌ Redis error:', err.message);
+});
+
+redis.on('close', () => {
+  console.log('⚠️  Redis connection closed');
+});
+
+export default redis;

@@ -34,6 +34,7 @@
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "openai": "^6.34.0",
+    "twitter-api-v2": "^1.29.0",
     "zod": "^3.24.3"
   },
   "devDependencies": {
