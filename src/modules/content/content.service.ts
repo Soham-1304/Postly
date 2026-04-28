@@ -69,7 +69,7 @@ export class ContentService {
       // Initialize Gemini client with API key from env
       const client = new GoogleGenerativeAI(env.GEMINI_API_KEY);
       const model = client.getGenerativeModel({
-        model: 'gemini-2.0-flash',
+        model: 'gemini-3.1-flash-lite-preview',
         systemInstruction: systemPrompt
       });
 
@@ -169,7 +169,7 @@ export class ContentService {
 
       return {
         generated,
-        model_used: 'gemini-2.0-flash',
+        model_used: 'gemini-3.1-flash-lite-preview',
         tokens_used: tokenCount
       };
     } catch (error) {
