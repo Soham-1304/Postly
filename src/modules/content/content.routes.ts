@@ -1,6 +1,11 @@
-import { Router } from "express";
-import { sendError } from "../../utils/response";
+import { Router } from 'express';
+import { ContentController } from './content.controller';
+import { requireAuth } from '../../middleware/auth';
 
+const contentController = new ContentController();
 export const contentRouter = Router();
 
-contentRouter.post("/generate", (_req, res) => sendError(res, "Content generation endpoint scaffolded", 501));
+// POST /api/content/generate (protected)
+contentRouter.post('/generate', requireAuth, (req, res, next) =>
+  contentController.generateContent(req, res, next)
+);
