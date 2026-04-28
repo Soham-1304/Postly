@@ -32,6 +32,8 @@ export const publishQueue = new Queue<PublishJobData>('platform-publish', {
 });
 
 // Event handlers
+// Note: BullMQ has incomplete TypeScript definitions for event handlers
+// Using `as any` is necessary here due to library limitations
 (publishQueue as any).on('completed', (job: any) => {
   console.log(`✅ Job completed: ${job.id} (${job.data.platform})`);
 });
