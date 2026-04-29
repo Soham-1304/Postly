@@ -21,19 +21,22 @@ export async function processLinkedInJob(job: Job<PublishJobData>) {
     let accessToken: string;
     let personUrn: string;
 
-    const socialAccount = await prisma.socialAccount.findFirst({
-      where: { userId, platform: 'linkedin' }
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { socialAccounts: { where: { platform: 'linkedin' } } }
     });
+
+    const socialAccount = user?.socialAccounts?.[0];
 
     if (socialAccount && socialAccount.accessTokenEnc) {
       accessToken = decrypt(socialAccount.accessTokenEnc);
       personUrn = socialAccount.handle; // Assuming handle stores the URN
-    } else if (process.env.LINKEDIN_ACCESS_TOKEN && process.env.LINKEDIN_PERSON_URN) {
+    } else if (user?.email === 'admin@postly.com' && process.env.LINKEDIN_ACCESS_TOKEN && process.env.LINKEDIN_PERSON_URN) {
       accessToken = process.env.LINKEDIN_ACCESS_TOKEN;
       personUrn = process.env.LINKEDIN_PERSON_URN;
-      console.log('⚠️ Falling back to LinkedIn credentials from .env');
+      console.log('⚠️ Falling back to LinkedIn credentials from .env for admin user');
     } else {
-      throw new Error('No LinkedIn account connected for this user and no .env fallback found');
+      throw new Error('No LinkedIn account connected for this user');
     }
 
     // 2. Post to LinkedIn using ugcPosts API
