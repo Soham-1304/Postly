@@ -7,17 +7,18 @@ async function start() {
   try {
     // Test Redis connection
     await redis.ping();
-    console.log("✅ Redis ready for BullMQ");
+    console.log("Redis connected successfully");
 
-    // Start BullMQ worker
-    console.log("🚀 BullMQ worker started, listening on platform-publish queue");
+    // Wait for BullMQ worker to confirm it is ready
+    await publishWorker.waitUntilReady();
+    console.log(`BullMQ worker READY — listening on queue: ${publishWorker.name}`);
 
     // Start Express server
     app.listen(env.PORT, () => {
       console.log(`Postly API listening on port ${env.PORT}`);
     });
   } catch (error) {
-    console.error("❌ Failed to start server:", error);
+    console.error("Failed to start server:", error);
     process.exit(1);
   }
 }
