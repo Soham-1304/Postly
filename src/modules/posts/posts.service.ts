@@ -14,13 +14,19 @@ export class PostsService {
       tone: string;
       language: string;
       model: string;
+      preGeneratedContent?: Record<string, { content: string }>;
     }
   ) {
-    const generated = await contentService.generateContent({
-      ...data,
-      userId,
-      model: data.model as 'gemini' | 'openai' | 'anthropic'
-    });
+    let generated: any;
+    if (data.preGeneratedContent) {
+      generated = { generated: data.preGeneratedContent, model_used: data.model };
+    } else {
+      generated = await contentService.generateContent({
+        ...data,
+        userId,
+        model: data.model as 'gemini' | 'openai' | 'anthropic'
+      });
+    }
 
     const post = await prisma.post.create({
       data: {

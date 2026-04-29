@@ -44,11 +44,17 @@ function buildModelKeyboard(): InlineKeyboard {
     .text('Claude Sonnet (Anthropic)', 'model:anthropic');
 }
 
-function buildConfirmKeyboard(): InlineKeyboard {
-  return new InlineKeyboard()
-    .text('✓ Post Now', 'confirm:yes')
-    .text('✎ Edit Idea', 'confirm:edit')
-    .text('✕ Cancel', 'confirm:cancel');
+function buildConfirmKeyboard(platforms: string[] = []): InlineKeyboard {
+  const keyboard = new InlineKeyboard()
+    .text('✓ Post Now', 'confirm:yes').row();
+  
+  platforms.forEach(p => {
+    keyboard.text(`✎ Edit ${PLATFORM_LABELS[p]}`, `edit_platform:${p}`).row();
+  });
+  
+  keyboard.text('✎ Re-generate All', 'confirm:edit').row();
+  keyboard.text('✕ Cancel', 'confirm:cancel');
+  return keyboard;
 }
 
 // ─── Callback Query Handler (button taps) ────────────────────────────────────
@@ -149,6 +155,16 @@ export const handleCallbackQuery = async (ctx: BotContext) => {
     );
   }
 
+  // Edit specific platform
+  if (data.startsWith('edit_platform:') && ctx.session.step === 'preview') {
+    const platform = data.split(':')[1];
+    ctx.session.step = `awaiting_edit:${platform}`;
+    return ctx.reply(
+      `Please send me your new custom content for ${PLATFORM_LABELS[platform]}:`,
+      { parse_mode: 'Markdown' }
+    );
+  }
+
   // Confirm / Edit / Cancel
   if (data.startsWith('confirm:') && ctx.session.step === 'preview') {
     const action = data.split(':')[1];
@@ -181,6 +197,26 @@ export const handleConversationStep = async (ctx: BotContext) => {
   // Only handle free text during idea step
   if (ctx.session.step === 'awaiting_idea') {
     return handleIdeaInput(ctx, text);
+  }
+
+  // Handle per-platform edits
+  if (ctx.session.step?.startsWith('awaiting_edit:')) {
+    const platform = ctx.session.step.split(':')[1];
+    if (ctx.session.generatedContent && ctx.session.generatedContent[platform]) {
+      ctx.session.generatedContent[platform].content = text;
+      ctx.session.step = 'preview';
+      
+      const charCount = text.length;
+      await ctx.reply(
+        `*[ ${PLATFORM_LABELS[platform]} ]*\n\n${text}\n\n_(${charCount} chars)_`,
+        { parse_mode: 'Markdown' }
+      );
+      
+      return ctx.reply(
+        `Updated ${PLATFORM_LABELS[platform]}!\n\nConfirm and post?`,
+        { reply_markup: buildConfirmKeyboard(ctx.session.platforms) }
+      );
+    }
   }
 
   // For any other step where we expect a button, nudge the user
@@ -239,25 +275,24 @@ async function handleIdeaInput(ctx: BotContext, idea: string) {
     ctx.session.generatedContent = result.generated;
     ctx.session.step = 'preview';
 
-    // Build preview text
-    const preview = ctx.session.platforms!.map((platform) => {
+    // Build preview text by sending a separate message per platform
+    for (const platform of ctx.session.platforms!) {
       const data = result.generated[platform];
-      if (!data) return '';
+      if (!data) continue;
       const charCount = data.content.length;
-      const snippet = data.content.length > 200
-        ? data.content.substring(0, 200) + '...'
-        : data.content;
-      return `${PLATFORM_LABELS[platform]} _(${charCount} chars)_:\n${snippet}`;
-    }).filter(Boolean).join('\n\n─────────────────\n\n');
+      await ctx.reply(
+        `*[ ${PLATFORM_LABELS[platform]} ]*\n\n${data.content}\n\n_(${charCount} chars)_`,
+        { parse_mode: 'Markdown' }
+      );
+    }
 
     // Delete the "generating" message
     await ctx.api.deleteMessage(ctx.chat!.id, thinkingMsg.message_id).catch(() => {});
 
     return ctx.reply(
-      `*Here's your content preview:*\n\n${preview}\n\n─────────────────\n\nConfirm and post?`,
+      `All previews generated. Confirm and post?`,
       {
-        parse_mode: 'Markdown',
-        reply_markup: buildConfirmKeyboard(),
+        reply_markup: buildConfirmKeyboard(ctx.session.platforms),
       }
     );
   } catch (error) {
@@ -282,6 +317,7 @@ async function handleConfirm(ctx: BotContext) {
       tone: ctx.session.tone!,
       language: 'en',
       model: ctx.session.model!,
+      preGeneratedContent: ctx.session.generatedContent,
     });
 
     const platformList = ctx.session.platforms!
