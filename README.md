@@ -1,103 +1,266 @@
 # Postly
 
-Postly is a backend-only social content workflow: a Telegram bot collects a post idea, the API generates platform-specific content with Gemini, and BullMQ queues publishing jobs for Twitter/X, LinkedIn, Instagram, and Threads.
+> **Live API:** `https://postly-api.onrender.com`
+> **Telegram Bot:** Search `@postly_bot` on Telegram (or use the token from your BotFather setup)
+> **Health Check:** [`https://postly-api.onrender.com/health`](https://postly-api.onrender.com/health)
+
+---
+
+Postly is a multi-platform AI content publishing backend. A user sends a raw idea to the Telegram bot, picks target platforms and tone, and the system generates platform-specific content using **Google Gemini** and publishes it automatically to **Twitter/X**, **LinkedIn**, **Instagram**, and **Threads** via a **BullMQ** queue — no frontend needed for the core publish flow.
+
+---
 
 ## Stack
 
-- Node.js 18, TypeScript, Express
-- PostgreSQL with Prisma
-- Redis with BullMQ
-- grammy for Telegram webhook handling
-- Google Gemini API (`gemini-1.5-flash`) as the free AI provider
-- Jest and Supertest for API tests
-- Docker Compose for local app, Postgres, and Redis
+| Layer | Technology |
+|---|---|
+| Runtime | Node.js 18 (`.nvmrc` pinned) |
+| Framework | Express.js |
+| Database | PostgreSQL via **Supabase** (production) |
+| ORM | **Prisma** — schema-first, migrations tracked |
+| Queue Broker | Redis via **Redis Cloud** |
+| Queue | **BullMQ** (per-platform jobs, exponential backoff) |
+| AI | **Google Gemini `gemini-3.1-flash-lite-preview`** |
+| Bot | **grammy** — webhook mode only in production |
+| Auth | JWT — access token (15 min) + refresh token (7 days) with rotation |
+| Testing | Jest + Supertest (7 suites) |
+| Deployment | **Render** (Web Service + Background Worker) |
+| Containerisation | Docker + docker-compose (local dev) |
 
-## Telegram Bot Usage
+> **AI Note:** The task brief specifies OpenAI + Anthropic. We use Google Gemini (`gemini-3.1-flash-lite-preview`) as the primary AI engine. Both `"openai"` and `"anthropic"` model selectors route to Gemini internally. This is documented transparently in [`AI_USAGE.md`](AI_USAGE.md).
 
-Postly includes a Telegram bot for composing and publishing posts directly from chat.
+---
+
+## Telegram Bot
+
+The Telegram bot is the primary publishing interface. All commands work from your phone.
 
 ### Commands
 
-- `/start [token]` — Link your Telegram account. Get a token from the dashboard; use `/start <token>` to authenticate.
-- `/post` — Start a new post. Follow the conversation to select platforms, tone, and your idea.
-- `/status` — View the last 5 posts and their publishing status per platform.
-- `/accounts` — List connected social accounts (Twitter, LinkedIn, Instagram, Threads).
-- `/help` — Show command reference.
+| Command | What it does |
+|---|---|
+| `/start <token>` | Link your Telegram account to Postly |
+| `/post` | Begin a new post — walks through type, platforms, tone, model, idea |
+| `/status` | Last 5 posts and their per-platform publish statuses |
+| `/accounts` | List all connected social accounts |
+| `/help` | Show command reference |
 
-### Workflow Example
+### Full Publish Flow
 
-1. Run `/post`
-2. Choose post type (Announcement, Update, Engagement, Question)
-3. Select platforms (multi-select with inline buttons)
-4. Choose tone (Professional, Casual, Witty, Authoritative, Friendly)
-5. Choose AI model (Gemini, OpenAI*, Anthropic*) \*routes to Gemini
-6. Send your post idea (max 500 characters)
-7. Preview platform-specific content with hashtags
-8. Confirm to publish
+```
+1. /post
+2. Select post type   → [Announcement | Update | Engagement | Question]
+3. Select platforms   → [Twitter/X | LinkedIn | Instagram | Threads]  (multi-select)
+4. Select tone        → [Professional | Casual | Witty | Authoritative | Friendly]
+5. Select AI model    → [Gemini | OpenAI* | Anthropic*]   (*both route to Gemini)
+6. Type your idea     → max 500 characters
+7. Preview content    → per platform, with char counts and hashtags
+8. Confirm / Cancel   → jobs enqueue, status returned per platform
+```
 
-Jobs queue automatically to each platform. Monitor status with `/status`.
+---
 
-### Webhook Setup
+## API Reference
 
-In production, configure `TELEGRAM_WEBHOOK_URL` to point to `https://your-domain.com/api/bot/webhook`. The bot validates requests with `TELEGRAM_WEBHOOK_SECRET` (configure in BotFather).
+All endpoints return the standard response envelope:
+
+```json
+{ "data": {}, "meta": null, "error": null }
+```
+
+### Auth
+```
+POST  /api/auth/register      — email, password, name
+POST  /api/auth/login         — returns access_token + refresh_token
+POST  /api/auth/refresh       — refresh token rotation
+POST  /api/auth/logout        — invalidate refresh token
+GET   /api/auth/me            — current user profile
+```
+
+### User
+```
+GET    /api/user/profile
+PUT    /api/user/profile
+POST   /api/user/social-accounts
+GET    /api/user/social-accounts
+DELETE /api/user/social-accounts/:id
+PUT    /api/user/ai-keys
+```
+
+### Content
+```
+POST  /api/content/generate   — calls Gemini, returns per-platform content
+```
+
+### Posts
+```
+POST    /api/posts/publish       — queue immediately
+POST    /api/posts/schedule      — queue with future publish_at timestamp
+GET     /api/posts               — paginated list (?page=1&limit=10&status=published)
+GET     /api/posts/:id           — single post + platform statuses
+POST    /api/posts/:id/retry     — retry failed platform jobs
+DELETE  /api/posts/:id           — cancel scheduled post
+```
+
+### Dashboard
+```
+GET   /api/dashboard/stats    — total posts, success rate, per-platform breakdown
+```
+
+### Misc
+```
+GET   /health                 — returns 200 with service status
+POST  /api/bot/webhook        — Telegram webhook (validated with secret header)
+```
+
+---
 
 ## Local Setup
 
-1. Use Node 18:
+### Prerequisites
+- Node.js 18 (`nvm use`)
+- Docker + Docker Compose
 
-   ```bash
-   nvm use
-   ```
+### Steps
 
-2. Install dependencies:
+```bash
+# 1. Clone
+git clone https://github.com/Soham-1304/Postly.git
+cd Postly
 
-   ```bash
-   npm install
-   ```
+# 2. Use correct Node version
+nvm use
 
-3. Create local env:
+# 3. Install dependencies
+npm install
 
-   ```bash
-   cp .env.example .env
-   ```
+# 4. Set up environment
+cp .env.example .env
+# Fill in your values — see Environment Variables section below
 
-4. Start local dependencies:
+# 5. Start PostgreSQL and Redis locally
+docker-compose up -d postgres redis
 
-   ```bash
-   docker compose up -d postgres redis
-   ```
+# 6. Run DB migrations
+npm run prisma:deploy
 
-5. Run migrations and start the API:
+# 7. Start API server
+npm run dev
 
-   ```bash
-   npm run prisma:deploy
-   npm run dev
-   ```
+# 8. Start queue worker (separate terminal)
+npm run worker
 
-6. Check health:
+# 9. Verify health
+curl http://localhost:3000/health
+```
 
-   ```bash
-   curl http://localhost:3000/health
-   ```
+---
 
-## Required External Accounts
+## Environment Variables
 
-- Supabase PostgreSQL database for production `DATABASE_URL`
-- Redis Cloud instance for production `REDIS_URL` (BullMQ requires standard Redis, not Upstash due to Lua script compatibility)
-- Google AI Studio key for `GEMINI_API_KEY`
-- Telegram BotFather token for `TELEGRAM_BOT_TOKEN` and `TELEGRAM_WEBHOOK_SECRET`
-- Twitter API v2 credentials for platform publishing
-- LinkedIn API credentials for platform publishing
-- Instagram and Threads API credentials for platform publishing
-- Render web service for deployment
+Copy `.env.example` to `.env` and fill in all values. No real values are stored in the example.
 
-Detailed setup steps for GitHub, Supabase, Redis Cloud, env vars, and local verification are in [Phase 1 Setup](docs/PHASE_1_SETUP.md). Documentation for the final Dashboard APIs and comprehensive testing implementations can be found in [Phase 7 Dashboard](docs/PHASE_7_DASHBOARD.md).
+| Variable | Description |
+|---|---|
+| `PORT` | Express server port (default `3000`) |
+| `NODE_ENV` | `development` or `production` |
+| `DATABASE_URL` | PostgreSQL connection string (pooled) |
+| `DIRECT_URL` | PostgreSQL direct URL (used by Prisma migrations) |
+| `REDIS_URL` | Redis connection string (Redis Cloud in production) |
+| `ACCESS_TOKEN_SECRET` | Long random string for JWT access token signing |
+| `REFRESH_TOKEN_SECRET` | Long random string for JWT refresh token signing |
+| `ENCRYPTION_KEY` | 32-byte hex string — used to AES-256-GCM encrypt stored tokens/keys |
+| `GEMINI_API_KEY` | Google AI Studio API key (`gemini-3.1-flash-lite-preview`) |
+| `TELEGRAM_BOT_TOKEN` | Token from BotFather |
+| `TELEGRAM_WEBHOOK_SECRET` | Random secret, validated on every webhook request |
+| `APP_BASE_URL` | Public HTTPS URL of the deployed API (used for webhook setup) |
+| `LINKEDIN_ACCESS_TOKEN` | LinkedIn access token (.env fallback for testing) |
+| `LINKEDIN_PERSON_URN` | LinkedIn person URN (e.g. `urn:li:person:ABC123`) |
+
+---
+
+## Telegram Webhook Setup
+
+After deploying to Render, register your webhook once:
+
+```bash
+curl "https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/setWebhook" \
+  -d "url=https://postly-api.onrender.com/api/bot/webhook" \
+  -d "secret_token=<TELEGRAM_WEBHOOK_SECRET>"
+```
+
+Verify it is live:
+```bash
+curl "https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/getWebhookInfo"
+```
+
+---
+
+## Render Deployment
+
+Two services are required:
+
+### Web Service (`postly-api`)
+| Field | Value |
+|---|---|
+| Build Command | `npm install && npm run build && npx prisma migrate deploy` |
+| Start Command | `node dist/server.js` |
+
+### Background Worker (`postly-worker`)
+| Field | Value |
+|---|---|
+| Build Command | `npm install && npm run build` |
+| Start Command | `node dist/modules/queue/worker.js` |
+
+Add all environment variables listed above to both services in the Render dashboard.
+
+---
+
+## Running Tests
+
+```bash
+npm run test
+```
+
+Tests use Jest + Supertest against the live Supabase + Redis Cloud connections (no mocks for infrastructure). The `setupEnv.ts` file injects all required env vars before each suite runs.
+
+Test suites:
+- `auth.test.ts` — register + login flow
+- `middleware.test.ts` — JWT validation (missing, invalid token)
+- `content.test.ts` — input validation on `/api/content/generate`
+- `posts.test.ts` — publish flow + paginated GET
+- `dashboard.test.ts` — stats endpoint + response schema
+- `bot.test.ts` — Telegram webhook routing
+- `health.test.ts` — health check
+
+---
 
 ## Git Strategy
 
-Keep commits small and phase-based. Recommended first commits:
+Commits follow a phase-based structure mirroring the build order:
 
-- `chore: init project structure and dependencies`
-- `chore: add docker-compose, Dockerfile, and env validation`
-- `feat: add prisma schema and initial migration`
-- `feat: express app bootstrap with health check and route scaffolds`
+```
+chore: init project structure and dependencies
+feat: add prisma schema and initial migrations
+feat: express app with health check and route scaffolds
+feat: JWT auth with bcrypt, access + refresh token rotation
+feat: user profile and social account management endpoints
+feat: AES-256-GCM encryption for stored tokens and API keys
+feat: Gemini content engine with per-platform prompt enforcement
+feat: BullMQ publishing pipeline with per-platform job processors
+feat: Twitter and LinkedIn live API integrations
+feat: Telegram bot with Redis session state and publish flow
+feat: complete Phase 7 Dashboard API and testing suite
+```
+
+---
+
+## Required External Services
+
+- **Supabase** — hosted PostgreSQL (free tier)
+- **Redis Cloud** — standard Redis, BullMQ-compatible (not Upstash — Lua script limitations)
+- **Google AI Studio** — Gemini API key (`gemini-3.1-flash-lite-preview`)
+- **BotFather** — Telegram bot token and webhook secret
+- **Twitter Developer Portal** — OAuth 1.0a credentials for posting
+- **LinkedIn Developer** — access token and person URN for `ugcPosts` API
+- **Render** — two free-tier services (Web + Background Worker)
