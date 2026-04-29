@@ -1,8 +1,8 @@
 # Postly
 
-> **Live API:** `https://postly-api.onrender.com`
-> **Telegram Bot:** Search `@postly_bot` on Telegram (or use the token from your BotFather setup)
-> **Health Check:** [`https://postly-api.onrender.com/health`](https://postly-api.onrender.com/health)
+> **Live API:** `https://postly-outbox.onrender.com`
+> **Telegram Bot:** Search for your bot on Telegram using the username from BotFather
+> **Health Check:** [`https://postly-outbox.onrender.com/health`](https://postly-outbox.onrender.com/health)
 
 ---
 
