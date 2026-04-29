@@ -1,7 +1,5 @@
 import { Queue } from 'bullmq';
-import { redis } from '../../config/redis';
-import Redis from 'ioredis';
-import { env } from '../../config/env';
+import { createRedisConnection } from '../../config/redis';
 
 /**
  * Job data type for publishing to platforms
@@ -21,7 +19,7 @@ export interface PublishJobData {
  * Retry: 3 attempts with exponential backoff (1s → 5s → 25s)
  */
 export const publishQueue = new Queue<PublishJobData>('platform-publish', {
-  connection: new Redis(env.REDIS_URL, { maxRetriesPerRequest: null }),
+  connection: createRedisConnection(),
   defaultJobOptions: {
     attempts: 3,
     backoff: {
