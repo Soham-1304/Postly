@@ -63,7 +63,7 @@ export class PostsService {
           userId,
           attempts: 0
         };
-        await (publishQueue as any).add(jobData as any);
+        await publishQueue.add('publish', jobData);
 
         return platformPost;
       })
@@ -133,7 +133,7 @@ export class PostsService {
           userId,
           attempts: 0
         };
-        await (publishQueue as any).add(jobData as any);
+        await publishQueue.add('publish', jobData);
 
         return platformPost;
       })
@@ -225,7 +225,7 @@ export class PostsService {
         attempts: platformPost.attempts
       };
 
-      await (publishQueue as any).add(jobData as any);
+      await publishQueue.add('publish', jobData);
 
       await prisma.platformPost.update({
         where: { id: platformPost.id },
