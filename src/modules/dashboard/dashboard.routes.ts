@@ -1,6 +1,10 @@
 import { Router } from "express";
-import { sendError } from "../../utils/response";
+import { requireAuth } from "../../middleware/auth";
+import { DashboardController } from "./dashboard.controller";
 
+const controller = new DashboardController();
 export const dashboardRouter = Router();
 
-dashboardRouter.get("/stats", (_req, res) => sendError(res, "Dashboard stats endpoint scaffolded", 501));
+dashboardRouter.get("/stats", requireAuth, (req, res, next) =>
+  controller.getStats(req, res, next)
+);

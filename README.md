@@ -30,7 +30,7 @@ Postly includes a Telegram bot for composing and publishing posts directly from 
 2. Choose post type (Announcement, Update, Engagement, Question)
 3. Select platforms (multi-select with inline buttons)
 4. Choose tone (Professional, Casual, Witty, Authoritative, Friendly)
-5. Choose AI model (Gemini, OpenAI*, Anthropic*) *routes to Gemini
+5. Choose AI model (Gemini, OpenAI*, Anthropic*) \*routes to Gemini
 6. Send your post idea (max 500 characters)
 7. Preview platform-specific content with hashtags
 8. Confirm to publish
@@ -91,7 +91,7 @@ In production, configure `TELEGRAM_WEBHOOK_URL` to point to `https://your-domain
 - Instagram and Threads API credentials for platform publishing
 - Render web service for deployment
 
-Detailed setup steps for GitHub, Supabase, Redis Cloud, env vars, and local verification are in [Phase 1 Setup](docs/PHASE_1_SETUP.md).
+Detailed setup steps for GitHub, Supabase, Redis Cloud, env vars, and local verification are in [Phase 1 Setup](docs/PHASE_1_SETUP.md). Documentation for the final Dashboard APIs and comprehensive testing implementations can be found in [Phase 7 Dashboard](docs/PHASE_7_DASHBOARD.md).
 
 ## Git Strategy
 

@@ -36,12 +36,14 @@ Telegram user
 - `src/modules/bot/conversations/` contains multi-step conversation handlers for platform/tone/idea/confirm flow.
 - `src/modules/queue/queue.ts` defines the `platform-publish` queue with retry and backoff defaults.
 - `src/modules/queue/jobs/` contains job processors for each platform (Twitter, LinkedIn, Instagram, Threads).
+- `src/modules/dashboard/` provides aggregate statistics across a user's generated posts and queued platforms.
 
 ## Session Management
 
 Bot sessions are stored in Redis with a 30-minute inactivity timeout. The session key is `bot:session:{chatId}` to isolate conversations per user.
 
 **ConversationSession structure:**
+
 - `step` — current state in conversation flow (null, awaiting_post_type, awaiting_platforms, etc.)
 - `selectedPlatforms` — array of chosen platforms (Twitter, LinkedIn, Instagram, Threads)
 - `timestamp` — last activity time for timeout detection
@@ -66,10 +68,10 @@ Each selected platform gets its own BullMQ job. This avoids one failed platform 
 **Job retry strategy:** 3 attempts with exponential backoff (1s → 5s → 25s). Failed jobs log the error and update `PlatformPost.status` to 'failed'.
 
 **PublishJobData interface:**
+
 - `postId` — reference to Post record
 - `platformPostId` — reference to PlatformPost record
 - `platform` — target platform (twitter, linkedin, instagram, threads)
 - `content` — platform-specific content from Gemini
 - `userId` — Postly user ID for credential lookup
 - `attempts` — current retry attempt count
-
