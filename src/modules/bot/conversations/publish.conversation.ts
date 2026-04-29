@@ -78,7 +78,7 @@ export const handleCallbackQuery = async (ctx: BotContext) => {
     ctx.session.step = 'awaiting_platforms';
 
     return ctx.editMessageText(
-      `📝 Post type: *${postType}*\n\n📱 Which platforms should I post to?\n_(tap to toggle, then press Done)_`,
+      `Post type: *${postType}*\n\nWhich platforms should I post to?\n_(tap to toggle, then press Continue)_`,
       {
         parse_mode: 'Markdown',
         reply_markup: buildPlatformKeyboard([]),
@@ -101,7 +101,7 @@ export const handleCallbackQuery = async (ctx: BotContext) => {
       ctx.session.step = 'awaiting_tone';
 
       return ctx.editMessageText(
-        `📱 Platforms: *${selected.map(p => PLATFORM_LABELS[p]).join(', ')}*\n\n🎯 What tone should the content have?`,
+        `Platforms: *${selected.map(p => PLATFORM_LABELS[p]).join(', ')}*\n\nWhat tone should the content have?`,
         {
           parse_mode: 'Markdown',
           reply_markup: buildToneKeyboard(),
@@ -129,7 +129,7 @@ export const handleCallbackQuery = async (ctx: BotContext) => {
     ctx.session.step = 'awaiting_model';
 
     return ctx.editMessageText(
-      `🎯 Tone: *${tone}*\n\n🤖 Which AI model do you want to use?`,
+      `Tone: *${tone}*\n\nWhich AI model do you want to use?`,
       {
         parse_mode: 'Markdown',
         reply_markup: buildModelKeyboard(),
@@ -144,7 +144,7 @@ export const handleCallbackQuery = async (ctx: BotContext) => {
     ctx.session.step = 'awaiting_idea';
 
     return ctx.editMessageText(
-      `🤖 Model: *${model}*\n\n💡 Tell me your idea or core message.\n_(keep it brief, max 500 chars)_`,
+      `Model: *${model}*\n\nTell me your idea or core message.\n_(keep it brief, max 500 chars)_`,
       { parse_mode: 'Markdown' }
     );
   }
@@ -157,13 +157,13 @@ export const handleCallbackQuery = async (ctx: BotContext) => {
     if (action === 'edit') {
       ctx.session.step = 'awaiting_idea';
       return ctx.editMessageText(
-        '✏️ Let\'s rewrite the idea.\n\n💡 Tell me your new idea or core message _(max 500 chars)_:',
+        'Let\'s rewrite the idea.\n\nTell me your new idea or core message _(max 500 chars)_:',
         { parse_mode: 'Markdown' }
       );
     }
     if (action === 'cancel') {
       ctx.session.step = null;
-      return ctx.editMessageText('❌ Cancelled. Type /post whenever you\'re ready.');
+      return ctx.editMessageText('Cancelled. Type /post whenever you\'re ready.');
     }
   }
 };
@@ -223,7 +223,7 @@ async function handleIdeaInput(ctx: BotContext, idea: string) {
 
   ctx.session.idea = idea;
 
-  const thinkingMsg = await ctx.reply('⚙️ Generating your content...');
+  const thinkingMsg = await ctx.reply('Generating your content...');
 
   try {
     const result = await contentService.generateContent({
@@ -254,7 +254,7 @@ async function handleIdeaInput(ctx: BotContext, idea: string) {
     await ctx.api.deleteMessage(ctx.chat!.id, thinkingMsg.message_id).catch(() => {});
 
     return ctx.reply(
-      `✨ *Here's your content preview:*\n\n${preview}\n\n─────────────────\n\nConfirm and post?`,
+      `*Here's your content preview:*\n\n${preview}\n\n─────────────────\n\nConfirm and post?`,
       {
         parse_mode: 'Markdown',
         reply_markup: buildConfirmKeyboard(),
@@ -266,14 +266,14 @@ async function handleIdeaInput(ctx: BotContext, idea: string) {
     const msg = error instanceof Error ? error.message : 'Unknown error';
     console.error('Content generation failed:', error);
     return ctx.reply(
-      `❌ Content generation failed: ${msg}\n\nType /post to try again.`
+      `Content generation failed: ${msg}\n\nType /post to try again.`
     );
   }
 }
 
 async function handleConfirm(ctx: BotContext) {
   try {
-    await ctx.editMessageText('📤 Queuing your posts...');
+    await ctx.editMessageText('Queuing your posts...');
 
     await postsService.publishPost(ctx.userId!, {
       idea: ctx.session.idea!,
@@ -291,7 +291,7 @@ async function handleConfirm(ctx: BotContext) {
     ctx.session.step = null;
 
     return ctx.editMessageText(
-      `✅ *Posts queued successfully!*\n\nPublishing to:\n${platformList}\n\nType /status to track your posts.`,
+      `*Posts queued successfully!*\n\nPublishing to:\n${platformList}\n\nType /status to track your posts.`,
       { parse_mode: 'Markdown' }
     );
   } catch (error) {
@@ -299,7 +299,7 @@ async function handleConfirm(ctx: BotContext) {
     const msg = error instanceof Error ? error.message : 'Unknown error';
     console.error('Failed to queue post:', error);
     return ctx.editMessageText(
-      `❌ Failed to queue post: ${msg}\n\nType /post to try again.`
+      `Failed to queue post: ${msg}\n\nType /post to try again.`
     );
   }
 }

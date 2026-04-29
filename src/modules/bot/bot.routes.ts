@@ -22,4 +22,4 @@ const validateWebhookSecret = (req: Request, res: Response, next: () => void) =>
  * POST /webhook - Receive Telegram updates
  * Protected by webhook secret validation
  */
-botRouter.post('/webhook', validateWebhookSecret, webhookCallback(bot, 'express'));
+botRouter.post('/webhook', validateWebhookSecret, webhookCallback(bot, 'express', { timeoutMilliseconds: 60000 }));
