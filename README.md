@@ -12,6 +12,35 @@ Postly is a backend-only social content workflow: a Telegram bot collects a post
 - Jest and Supertest for API tests
 - Docker Compose for local app, Postgres, and Redis
 
+## Telegram Bot Usage
+
+Postly includes a Telegram bot for composing and publishing posts directly from chat.
+
+### Commands
+
+- `/start [token]` — Link your Telegram account. Get a token from the dashboard; use `/start <token>` to authenticate.
+- `/post` — Start a new post. Follow the conversation to select platforms, tone, and your idea.
+- `/status` — View the last 5 posts and their publishing status per platform.
+- `/accounts` — List connected social accounts (Twitter, LinkedIn, Instagram, Threads).
+- `/help` — Show command reference.
+
+### Workflow Example
+
+1. Run `/post`
+2. Choose post type (Announcement, Update, Engagement, Question)
+3. Select platforms (multi-select with inline buttons)
+4. Choose tone (Professional, Casual, Witty, Authoritative, Friendly)
+5. Choose AI model (Gemini, OpenAI*, Anthropic*) *routes to Gemini
+6. Send your post idea (max 500 characters)
+7. Preview platform-specific content with hashtags
+8. Confirm to publish
+
+Jobs queue automatically to each platform. Monitor status with `/status`.
+
+### Webhook Setup
+
+In production, configure `TELEGRAM_WEBHOOK_URL` to point to `https://your-domain.com/api/bot/webhook`. The bot validates requests with `TELEGRAM_WEBHOOK_SECRET` (configure in BotFather).
+
 ## Local Setup
 
 1. Use Node 18:
@@ -56,7 +85,10 @@ Postly is a backend-only social content workflow: a Telegram bot collects a post
 - Supabase PostgreSQL database for production `DATABASE_URL`
 - Redis Cloud instance for production `REDIS_URL` (BullMQ requires standard Redis, not Upstash due to Lua script compatibility)
 - Google AI Studio key for `GEMINI_API_KEY`
-- Telegram BotFather token for `TELEGRAM_BOT_TOKEN`
+- Telegram BotFather token for `TELEGRAM_BOT_TOKEN` and `TELEGRAM_WEBHOOK_SECRET`
+- Twitter API v2 credentials for platform publishing
+- LinkedIn API credentials for platform publishing
+- Instagram and Threads API credentials for platform publishing
 - Render web service for deployment
 
 Detailed setup steps for GitHub, Supabase, Redis Cloud, env vars, and local verification are in [Phase 1 Setup](docs/PHASE_1_SETUP.md).
