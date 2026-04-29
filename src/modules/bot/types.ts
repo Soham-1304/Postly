@@ -1,15 +1,7 @@
 import { Context } from 'grammy';
 
 export interface ConversationSession {
-  step:
-    | 'awaiting_post_type'
-    | 'awaiting_platforms'
-    | 'awaiting_tone'
-    | 'awaiting_model'
-    | 'awaiting_idea'
-    | 'preview'
-    | 'confirming'
-    | null;
+  step: string | null;
   postType?: string;
   platforms?: string[];
   selectedPlatforms?: string[]; // tracks multi-select toggle state
