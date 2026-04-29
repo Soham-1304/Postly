@@ -20,14 +20,14 @@ Postly is a multi-platform AI content publishing backend. A user sends a raw ide
 | ORM | **Prisma** — schema-first, migrations tracked |
 | Queue Broker | Redis via **Redis Cloud** |
 | Queue | **BullMQ** (per-platform jobs, exponential backoff) |
-| AI | **Google Gemini `gemini-3.1-flash-lite-preview`** |
+| AI | **Google Gemini** (primary), **OpenAI GPT-4o**, **Anthropic Claude Sonnet** |
 | Bot | **grammy** — webhook mode only in production |
 | Auth | JWT — access token (15 min) + refresh token (7 days) with rotation |
 | Testing | Jest + Supertest (7 suites) |
-| Deployment | **Render** (Web Service + Background Worker) |
+| Deployment | **Render** (single Web Service — API + Worker in-process) |
 | Containerisation | Docker + docker-compose (local dev) |
 
-> **AI Note:** The task brief specifies OpenAI + Anthropic. We use Google Gemini (`gemini-3.1-flash-lite-preview`) as the primary AI engine. Both `"openai"` and `"anthropic"` model selectors route to Gemini internally. This is documented transparently in [`AI_USAGE.md`](AI_USAGE.md).
+> **AI Models:** All three providers have production-ready implementations. Gemini uses the platform API key (`GEMINI_API_KEY`). OpenAI and Anthropic use the user's own encrypted API keys stored in the `ai_keys` table. See [`AI_USAGE.md`](AI_USAGE.md) for full details.
 
 ---
 
@@ -52,7 +52,7 @@ The Telegram bot is the primary publishing interface. All commands work from you
 2. Select post type   → [Announcement | Update | Engagement | Question]
 3. Select platforms   → [Twitter/X | LinkedIn | Instagram | Threads]  (multi-select)
 4. Select tone        → [Professional | Casual | Witty | Authoritative | Friendly]
-5. Select AI model    → [Gemini | OpenAI* | Anthropic*]   (*both route to Gemini)
+5. Select AI model    → [Gemini 3.1 Flash | GPT-4o (OpenAI) | Claude Sonnet (Anthropic)]
 6. Type your idea     → max 500 characters
 7. Preview content    → per platform, with char counts and hashtags
 8. Confirm / Cancel   → jobs enqueue, status returned per platform
@@ -198,21 +198,17 @@ curl "https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/getWebhookInfo"
 
 ## Render Deployment
 
-Two services are required:
+A single Web Service handles both the API and the BullMQ background worker in one process.
 
-### Web Service (`postly-api`)
+### Web Service (`postly-outbox`)
 | Field | Value |
 |---|---|
 | Build Command | `npm install && npm run build && npx prisma migrate deploy` |
-| Start Command | `node dist/server.js` |
+| Start Command | `node dist/src/server.js` |
 
-### Background Worker (`postly-worker`)
-| Field | Value |
-|---|---|
-| Build Command | `npm install && npm run build` |
-| Start Command | `node dist/modules/queue/worker.js` |
+The `server.ts` entry point boots Express, connects to Redis, and explicitly calls `publishWorker.waitUntilReady()` to confirm the BullMQ worker is alive before accepting traffic.
 
-Add all environment variables listed above to both services in the Render dashboard.
+Add all environment variables listed in the `.env.example` to the Render dashboard.
 
 ---
 

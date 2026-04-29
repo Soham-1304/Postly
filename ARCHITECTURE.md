@@ -80,7 +80,7 @@ User (Telegram Phone)
 - **`src/app.ts`** — Express middleware stack, route mounting, global error handler.
 - **`src/config/env.ts`** — Zod-validated environment variables. App will not start if any required variable is missing.
 - **`src/config/db.ts`** — Singleton Prisma client.
-- **`src/config/redis.ts`** — Singleton ioredis client for BullMQ + bot sessions.
+- **`src/config/redis.ts`** — `createRedisConnection()` factory for isolated ioredis instances. BullMQ Queue and Worker each get their own connection to prevent blocking-read deadlocks.
 - **`src/middleware/auth.ts`** — JWT validation middleware. Verifies access token and attaches `req.user`. Returns `401` on all failures.
 - **`src/modules/auth/`** — Register, login, refresh, logout, getMe. Passwords bcrypt cost 12. Refresh tokens stored in DB and rotated on every use.
 - **`src/modules/user/`** — Profile management, social account CRUD, AI key storage.
@@ -141,9 +141,12 @@ Six tables, intentionally normalized to allow per-platform partial failures.
 
 ## AI Integration
 
-**Model used:** `gemini-3.1-flash-lite-preview`
+**Models supported:**
+- `gemini` — Google Gemini `gemini-3.1-flash-lite-preview` (platform key via `GEMINI_API_KEY`)
+- `openai` — OpenAI GPT-4o (user's own key from `ai_keys.openaiKeyEnc`, AES-256-GCM encrypted)
+- `anthropic` — Anthropic Claude Sonnet (user's own key from `ai_keys.anthropicKeyEnc`, AES-256-GCM encrypted)
 
-The task brief specifies OpenAI GPT-4o and Anthropic Claude. We use Google Gemini as a free, production-capable substitute. Both `"openai"` and `"anthropic"` selectors in the API and Telegram bot route to Gemini internally. The `model_used` field in responses is returned honestly as `"gemini-3.1-flash-lite-preview"`. This is documented in `AI_USAGE.md`.
+All three have full production implementations in `content.service.ts`. The Telegram bot model selector lets the user choose any of the three.
 
 The system prompt enforces:
 - Platform-specific character limits (Twitter ≤280, Threads ≤500)
@@ -182,5 +185,5 @@ Response is validated post-generation and will throw if char limits are violated
 
 - **Twitter API tier:** Successfully authenticates via OAuth 1.0a. Posting requires a paid Twitter developer plan (Basic or above). The code is correct — Twitter returns a `402 Payment Required` on free tier attempts.
 - **Instagram / Threads:** Job processor stubs are in place with the correct retry/status-update architecture. Activation requires a Facebook Developer App with advanced permissions (not available on free tier). Production-ready once credentials are provided.
-- **Bot polling on free Render tier:** Render free services spin down after 15 minutes of inactivity. The bot uses webhooks (not polling), so it wakes immediately on incoming Telegram messages.
-- **Redis eviction policy:** Redis Cloud free tier uses `volatile-lru` instead of `noeviction`. BullMQ emits a warning but operates correctly for this workload scale.
+- **Render cold starts:** Render free services spin down after 15 minutes of inactivity. The first bot interaction after spin-down takes ~30s to wake. Subsequent requests are fast (~2–4s).
+- **Redis eviction policy:** Redis Cloud must be configured with `noeviction` policy for BullMQ to function correctly. This has been set.

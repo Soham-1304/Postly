@@ -4,19 +4,23 @@ This document describes every instance where AI tools were used during the devel
 
 ---
 
-## Critical Substitution — AI Model
+## AI Model Architecture
 
-**The task brief specifies OpenAI GPT-4o and Anthropic Claude Sonnet as AI providers.**
+**All three AI providers specified in the task brief have production-ready implementations:**
 
-We use **Google Gemini (`gemini-3.1-flash-lite-preview`)** as the AI engine for all content generation. This is the latest available Gemini model on the free tier and delivers fast, high-quality structured JSON output suitable for this use case.
+| Model Selector | Provider | API | Key Source |
+|---|---|---|---|
+| `gemini` | Google Gemini | `gemini-3.1-flash-lite-preview` | Platform key (`GEMINI_API_KEY` in `.env`) |
+| `openai` | OpenAI | `gpt-4o` | User's own key (AES-256-GCM encrypted in `ai_keys.openaiKeyEnc`) |
+| `anthropic` | Anthropic | `claude-sonnet-4-5-20250514` | User's own key (AES-256-GCM encrypted in `ai_keys.anthropicKeyEnc`) |
 
-### How the substitution is implemented in code:
+### Implementation details:
 
-- The `model` field in `POST /api/content/generate` still accepts `"openai"` and `"anthropic"` values (as the spec requires).
-- Internally, all three model options (`"gemini"`, `"openai"`, `"anthropic"`) call the Gemini API via `@google/generative-ai`.
-- The `model_used` field in API responses is returned honestly as `"gemini-3.1-flash-lite-preview"`.
-- User's `ai_keys` table retains `openaiKeyEnc` and `anthropicKeyEnc` columns (schema unchanged) — the Gemini key is the platform fallback stored in `.env` as `GEMINI_API_KEY`.
-- The Telegram bot model selector shows "Gemini", "OpenAI\*", and "Anthropic\*" — the asterisk indicates they both route to Gemini.
+- Each provider has its own dedicated method in `content.service.ts`: `generateWithGemini()`, `generateWithOpenAI()`, `generateWithAnthropic()`.
+- Gemini is the primary/default model since it uses a platform-level API key. OpenAI and Anthropic require the user to store their own API keys via `PUT /api/user/ai-keys`.
+- All three share the same system prompt builder, JSON response parser, and per-platform validation logic.
+- The `model_used` field in API responses honestly reports which model was used (e.g., `"gemini-3.1-flash-lite-preview"`, `"gpt-4o"`, `"claude-sonnet-4-5-20250514"`).
+- The Telegram bot model selector shows all three options: `Gemini 3.1 Flash`, `GPT-4o (OpenAI)`, `Claude Sonnet (Anthropic)`.
 
 ---
 
@@ -97,8 +101,8 @@ Used throughout development as a pair programming assistant.
 | Project setup | High — initial scaffold | Reviewed schema, corrected fields |
 | Auth | High — service drafts | Verified bcrypt cost, rotation logic |
 | User/Encryption | Medium — crypto utility | Verified AES-256-GCM, tested round-trip |
-| AI Engine | Medium — Gemini integration | Updated model name, enforced validation |
-| Queue + Jobs | Medium — job skeletons | Verified retry config, status update order |
+| AI Engine | Medium — Gemini + OpenAI + Anthropic | Updated model names, enforced validation, verified all three providers |
+| Queue + Jobs | Medium — job skeletons | Verified retry config, status update order, fixed Redis connection isolation |
 | Twitter / LinkedIn | Low — implementation verified | Tested live against real API endpoints |
-| Telegram Bot | High — conversation flow | Fixed session key, type errors, tested on device |
+| Telegram Bot | High — conversation flow | Fixed session key, type errors, redesigned UI, tested on device |
 | Dashboard + Tests | Medium — drafts | Fixed assertions, ran migrations |
