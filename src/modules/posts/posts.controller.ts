@@ -32,7 +32,10 @@ const publishSchema = z.object({
     'friendly'
   ]),
   language: z.string().length(2).default('en'),
-  model: z.enum(['gemini', 'openai', 'anthropic'])
+  model: z.enum(['gemini', 'openai', 'anthropic']),
+  preGeneratedContent: z.record(z.object({
+    content: z.string()
+  })).optional()
 });
 
 const scheduleSchema = publishSchema.extend({

@@ -8,7 +8,7 @@
   "variable": [
     {
       "key": "baseUrl",
-      "value": "https://postly-api.onrender.com",
+      "value": "https://postly-outbox.onrender.com",
       "type": "string",
       "description": "Live Render deployment URL"
     },
@@ -85,7 +85,7 @@
             "header": [{"key": "Content-Type", "value": "application/json"}],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Soham Karandikar\",\n  \"email\": \"soham@example.com\",\n  \"password\": \"Password123!\"\n}"
+              "raw": "{\n  \"name\": \"Demo User\",\n  \"email\": \"demo@example.com\",\n  \"password\": \"Password123!\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/auth/register",
@@ -117,7 +117,7 @@
             "header": [{"key": "Content-Type", "value": "application/json"}],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"soham@example.com\",\n  \"password\": \"Password123!\"\n}"
+              "raw": "{\n  \"email\": \"demo@example.com\",\n  \"password\": \"Password123!\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/auth/login",
@@ -215,7 +215,7 @@
             "header": [{"key": "Content-Type", "value": "application/json"}],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Soham Karandikar\",\n  \"bio\": \"Building cool stuff\",\n  \"defaultTone\": \"professional\",\n  \"defaultLanguage\": \"en\"\n}"
+              "raw": "{\n  \"name\": \"Demo User\",\n  \"bio\": \"Testing the API capabilities\",\n  \"defaultTone\": \"professional\",\n  \"defaultLanguage\": \"en\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/user/profile",
@@ -232,7 +232,7 @@
             "header": [{"key": "Content-Type", "value": "application/json"}],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"platform\": \"twitter\",\n  \"accessToken\": \"your_twitter_access_token\",\n  \"refreshToken\": null,\n  \"handle\": \"@yourhandle\"\n}"
+              "raw": "{\n  \"platform\": \"twitter\",\n  \"accessToken\": \"mock_twitter_token_123\",\n  \"refreshToken\": null,\n  \"handle\": \"@demouser\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/user/social-accounts",
@@ -328,10 +328,12 @@
       ]
     },
     {
-      "name": "Posts",
+      "name": "Posts & Queue",
+      "description": "These endpoints create Post records in the database and automatically enqueue them in BullMQ for background processing.",
       "item": [
         {
-          "name": "Publish Post",
+          "name": "Publish Post (Enqueue Immediate)",
+          "description": "Creates a Post record and immediately queues a background job for each requested platform in BullMQ.",
           "event": [
             {
               "listen": "test",
@@ -351,7 +353,7 @@
             "header": [{"key": "Content-Type", "value": "application/json"}],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"idea\": \"AI is rapidly changing software development workflows\",\n  \"postType\": \"announcement\",\n  \"tone\": \"professional\",\n  \"language\": \"en\",\n  \"model\": \"gemini\",\n  \"platforms\": [\"twitter\"],\n  \"content\": {\n    \"twitter\": {\n      \"content\": \"AI is transforming how developers work. Tools like Copilot are making every developer 10x more effective. The future is here. #AI #DevTools #Productivity\",\n      \"char_count\": 158,\n      \"hashtags\": [\"#AI\", \"#DevTools\", \"#Productivity\"]\n    }\n  }\n}"
+              "raw": "{\n  \"idea\": \"AI is rapidly changing software development workflows\",\n  \"post_type\": \"announcement\",\n  \"tone\": \"professional\",\n  \"language\": \"en\",\n  \"model\": \"gemini\",\n  \"platforms\": [\"twitter\"],\n  \"preGeneratedContent\": {\n    \"twitter\": {\n      \"content\": \"AI is transforming how developers work. Tools like Copilot are making every developer 10x more effective. The future is here. #AI #DevTools #Productivity\",\n      \"char_count\": 158,\n      \"hashtags\": [\"#AI\", \"#DevTools\", \"#Productivity\"]\n    }\n  }\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/posts/publish",
@@ -362,13 +364,14 @@
           "response": []
         },
         {
-          "name": "Schedule Post",
+          "name": "Schedule Post (Enqueue Delayed)",
+          "description": "Creates a Post record and adds delayed background jobs to BullMQ that will fire at the specified `publish_at` timestamp.",
           "request": {
             "method": "POST",
             "header": [{"key": "Content-Type", "value": "application/json"}],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"idea\": \"Scheduled post about AI and automation\",\n  \"postType\": \"announcement\",\n  \"tone\": \"professional\",\n  \"language\": \"en\",\n  \"model\": \"gemini\",\n  \"platforms\": [\"twitter\", \"linkedin\"],\n  \"publishAt\": \"2026-05-01T10:00:00.000Z\",\n  \"content\": {\n    \"twitter\": {\n      \"content\": \"The AI revolution in software is just getting started. #AI #Future\",\n      \"char_count\": 63,\n      \"hashtags\": [\"#AI\", \"#Future\"]\n    },\n    \"linkedin\": {\n      \"content\": \"We are witnessing a fundamental shift in how software is built. AI-powered tools are not replacing developers — they are making each developer significantly more capable.\",\n      \"char_count\": 168,\n      \"hashtags\": [\"#AI\", \"#SoftwareDevelopment\", \"#Innovation\"]\n    }\n  }\n}"
+              "raw": "{\n  \"idea\": \"Scheduled post about AI and automation\",\n  \"post_type\": \"announcement\",\n  \"tone\": \"professional\",\n  \"language\": \"en\",\n  \"model\": \"gemini\",\n  \"platforms\": [\"twitter\", \"linkedin\"],\n  \"publish_at\": \"2026-05-01T10:00:00.000Z\",\n  \"preGeneratedContent\": {\n    \"twitter\": {\n      \"content\": \"The AI revolution in software is just getting started. #AI #Future\",\n      \"char_count\": 63,\n      \"hashtags\": [\"#AI\", \"#Future\"]\n    },\n    \"linkedin\": {\n      \"content\": \"We are witnessing a fundamental shift in how software is built. AI-powered tools are not replacing developers — they are making each developer significantly more capable.\",\n      \"char_count\": 168,\n      \"hashtags\": [\"#AI\", \"#SoftwareDevelopment\", \"#Innovation\"]\n    }\n  }\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/posts/schedule",
