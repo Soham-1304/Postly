@@ -7,10 +7,10 @@ const contentService = new ContentService();
 const postsService = new PostsService();
 
 const PLATFORM_LABELS: Record<string, string> = {
-  twitter: '🐦 Twitter/X',
-  linkedin: '💼 LinkedIn',
-  instagram: '📸 Instagram',
-  threads: '🧵 Threads',
+  twitter: 'Twitter/X',
+  linkedin: 'LinkedIn',
+  instagram: 'Instagram',
+  threads: 'Threads',
 };
 
 const ALL_PLATFORMS = ['twitter', 'linkedin', 'instagram', 'threads'];
@@ -21,33 +21,34 @@ function buildPlatformKeyboard(selected: string[]): InlineKeyboard {
   const keyboard = new InlineKeyboard();
   ALL_PLATFORMS.forEach((p, i) => {
     const isSelected = selected.includes(p);
-    const label = `${isSelected ? '✅ ' : ''}${PLATFORM_LABELS[p]}`;
+    const label = `${isSelected ? '✓ ' : ''}${PLATFORM_LABELS[p]}`;
     keyboard.text(label, `platform:${p}`);
     if (i % 2 !== 0) keyboard.row();
   });
-  keyboard.row().text('✅ All Platforms', 'platform:all').row();
-  keyboard.text('Done ▶️', 'platform:done');
+  keyboard.row().text('Select All', 'platform:all').row();
+  keyboard.text('Continue →', 'platform:done');
   return keyboard;
 }
 
 function buildToneKeyboard(): InlineKeyboard {
   return new InlineKeyboard()
-    .text('💼 Professional', 'tone:professional').text('😎 Casual', 'tone:casual').row()
-    .text('😄 Witty', 'tone:witty').text('👑 Authoritative', 'tone:authoritative').row()
-    .text('🤝 Friendly', 'tone:friendly');
+    .text('Professional', 'tone:professional').text('Casual', 'tone:casual').row()
+    .text('Witty', 'tone:witty').text('Authoritative', 'tone:authoritative').row()
+    .text('Friendly', 'tone:friendly');
 }
 
 function buildModelKeyboard(): InlineKeyboard {
   return new InlineKeyboard()
-    .text('✨ GPT-4o (OpenAI)', 'model:openai').row()
-    .text('🧠 Claude Sonnet (Anthropic)', 'model:anthropic');
+    .text('Gemini 3.1 Flash', 'model:gemini').row()
+    .text('GPT-4o (OpenAI)', 'model:openai').row()
+    .text('Claude Sonnet (Anthropic)', 'model:anthropic');
 }
 
 function buildConfirmKeyboard(): InlineKeyboard {
   return new InlineKeyboard()
-    .text('✅ Yes, Post Now!', 'confirm:yes')
-    .text('✏️ Edit Idea', 'confirm:edit')
-    .text('❌ Cancel', 'confirm:cancel');
+    .text('✓ Post Now', 'confirm:yes')
+    .text('✎ Edit Idea', 'confirm:edit')
+    .text('✕ Cancel', 'confirm:cancel');
 }
 
 // ─── Callback Query Handler (button taps) ────────────────────────────────────
@@ -206,11 +207,11 @@ export const handlePostStart = async (ctx: BotContext) => {
   ctx.session.timestamp = Date.now();
 
   const keyboard = new InlineKeyboard()
-    .text('📢 Announcement', 'type:announcement').text('🧵 Thread', 'type:thread').row()
-    .text('📖 Story', 'type:story').text('📣 Promotional', 'type:promotional').row()
-    .text('🎓 Educational', 'type:educational').text('💬 Opinion', 'type:opinion');
+    .text('Announcement', 'type:announcement').text('Thread', 'type:thread').row()
+    .text('Story', 'type:story').text('Promotional', 'type:promotional').row()
+    .text('Educational', 'type:educational').text('Opinion', 'type:opinion');
 
-  return ctx.reply('👋 Let\'s create a post!\n\n📝 What type of post is this?', {
+  return ctx.reply('Let\'s create a post.\n\nWhat type of post is this?', {
     reply_markup: keyboard,
   });
 };

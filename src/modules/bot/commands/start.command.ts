@@ -9,11 +9,11 @@ export const handleStart = async (ctx: BotContext) => {
       const user = await prisma.user.findUnique({ where: { id: ctx.userId } });
 
       const keyboard = new InlineKeyboard()
-        .text('✍️ Create Post', 'menu:post').row()
-        .text('📊 My Posts', 'menu:status').text('🔗 Accounts', 'menu:accounts');
+        .text('Create Post', 'menu:post').row()
+        .text('My Posts', 'menu:status').text('Accounts', 'menu:accounts');
 
       return ctx.reply(
-        `👋 Welcome back, ${user?.name || 'User'}!\n\nWhat would you like to do?`,
+        `Welcome back, ${user?.name || 'User'}!\n\nWhat would you like to do?`,
         { reply_markup: keyboard }
       );
     }
@@ -30,11 +30,11 @@ export const handleStart = async (ctx: BotContext) => {
         ctx.userId = user.id;
 
         const keyboard = new InlineKeyboard()
-          .text('✍️ Create Post', 'menu:post').row()
-          .text('📊 My Posts', 'menu:status').text('🔗 Accounts', 'menu:accounts');
+          .text('Create Post', 'menu:post').row()
+          .text('My Posts', 'menu:status').text('Accounts', 'menu:accounts');
 
         return ctx.reply(
-          `✅ Account successfully linked!\n\n👋 Welcome, ${user.name}!\n\nWhat would you like to do?`,
+          `Account successfully linked!\n\nWelcome, ${user.name}!\n\nWhat would you like to do?`,
           { reply_markup: keyboard }
         );
       } catch (err) {
