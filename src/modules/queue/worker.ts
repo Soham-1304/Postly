@@ -1,5 +1,7 @@
 import { Worker } from 'bullmq';
 import { redis } from '../../config/redis';
+import Redis from 'ioredis';
+import { env } from '../../config/env';
 import { PublishJobData } from './queue';
 import { processTwitterJob } from './jobs/twitter.job';
 import { processLinkedInJob } from './jobs/linkedin.job';
@@ -31,7 +33,7 @@ export const publishWorker = new Worker<PublishJobData>(
     }
   },
   {
-    connection: redis,
+    connection: new Redis(env.REDIS_URL, { maxRetriesPerRequest: null }),
     concurrency: 5  // Process 5 jobs in parallel
   }
 );
